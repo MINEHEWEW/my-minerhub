@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Hub | Minehewew</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #0b0b0b; --card: #141414; --inp: #1f1f1f; --text: #eee; --accent: #2ecc71; --border: #2a2a2a; 
+            --moon-stroke: #eee; --obf-out: #000; --obf-text: #2ecc71;
+        }
+        .light-theme { 
+            --bg: #f5f5f5; --card: #ffffff; --inp: #eeeeee; --text: #111; --border: #ddd; 
+            --moon-stroke: #111; --obf-out: #f0f0f0; --obf-text: #111;
+        }
+        
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; transition: background 0.15s, color 0.15s; overflow-x: hidden; }
+
+        @keyframes fastPop { from { opacity: 0; transform: scale(0.98) translateY(5px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes fastOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95) translateY(10px); } }
+
+        .nav { background: var(--card); display: flex; align-items: center; border-bottom: 1px solid var(--border); height: 60px; position: sticky; top: 0; z-index: 100; }
+        .nav-btn { padding: 0 15px; cursor: pointer; height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border); }
+        .theme-toggle svg { width: 20px; height: 20px; fill: none; stroke: var(--moon-stroke); stroke-width: 2; }
+
+        .nav-items { flex: 1; display: flex; overflow-x: auto; scrollbar-width: none; }
+        .nav-items::-webkit-scrollbar { display: none; }
+        .nav b { padding: 0 20px; height: 60px; line-height: 60px; cursor: pointer; color: #555; font-size: 10px; text-transform: uppercase; font-weight: 700; flex-shrink: 0; }
+        .nav b.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+        .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+        .page { display: none; animation: fastPop 0.15s ease-out; }
+        .page.active { display: block; }
+
+        .card-ui { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; background: var(--inp); border: 1px solid var(--border); color: var(--text); border-radius: 12px; font-size: 14px; }
+        
+        button { border: none; color: #fff; font-weight: 900; border-radius: 12px; cursor: pointer; text-transform: uppercase; font-size: 10px; transition: 0.15s; display: flex; align-items: center; justify-content: center; }
+        .btn-main { background: var(--accent); padding: 15px; width: 100%; margin-top: 10px; }
+        .btn-copy { background: #ffcc00; color: #000; width: 100%; padding: 10px; margin-top: 5px; }
+
+        .addon-card { background: var(--card); padding: 20px; border-radius: 18px; margin-bottom: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .item-info { flex: 1; padding-right: 15px; }
+        .addon-card h3 { margin: 0 0 5px 0; color: var(--accent); font-size: 16px; }
+
+        .mod-btns { display: flex; gap: 8px; flex-shrink: 0; }
+        .btn-sq { width: 42px; height: 42px; border-radius: 12px; }
+        .btn-yellow { background: #ffcc00; color: #000; }
+        .btn-green { background: #2ecc71; color: #fff; }
+        .btn-red { background: #e74c3c; color: #fff; }
+
+        /* ОКНО ВЫВОДА КОДА */
+        pre { background: var(--obf-out); color: var(--obf-text); padding: 15px; border-radius: 12px; font-size: 11px; overflow-x: auto; max-height: 250px; border: 1px solid var(--border); }
+
+        /* МОДАЛКА */
+        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index: 1000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
+        .m-box { background: var(--card); padding: 30px; border-radius: 25px; width: 90%; max-width: 320px; text-align: center; border: 1px solid var(--border); position: relative; }
+        .m-box.in { animation: fastPop 0.15s ease-out forwards; }
+        .m-box.out { animation: fastOut 0.15s ease-in forwards; }
+        .m-close { position: absolute; top: 15px; right: 15px; cursor: pointer; opacity: 0.6; color: var(--text); }
+
+        .btn-logout { background: #e74c3c; padding: 12px; width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="modal" onclick="closeM()">
+        <div class="m-box" id="m_box" onclick="event.stopPropagation()">
+            <div class="m-close" onclick="closeM()">✕</div>
+            <div id="m_form">
+                <h3 style="font-size:12px">ВХОД В ПАНЕЛЬ</h3>
+                <input id="l" placeholder="Логин">
+                <input id="p" type="password" placeholder="Пароль">
+                <button class="btn-main" onclick="doLogin()">Войти</button>
+            </div>
+            <div id="m_info" style="display:none;">
+                <h3 style="font-size:12px">ПРОФИЛЬ</h3>
+                <p id="m_status" style="font-size:13px; font-weight:700; color:var(--accent)"></p>
+                <button class="btn-logout" onclick="doLogout()">Выйти</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="nav-btn" onclick="openM()">☰</div>
+        <div class="nav-btn theme-toggle" onclick="toggleT()">
+            <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </div>
+        <div class="nav-items">
+            <b id="t_addons" class="active" onclick="tab('addons')">Аддоны</b>
+            <b id="t_gen" onclick="tab('gen')">Генератор</b>
+            <b id="t_crypt" onclick="tab('crypt')">Обфускатор</b>
+            <b id="t_mod" onclick="tab('mod')">Публикация</b>
+            <b id="t_adm" style="display:none" onclick="tab('adm')">Админ</b>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="addons" class="page active"><div id="a_list"></div></div>
+        
+        <div id="gen" class="page">
+            <div class="card-ui">
+                <h2>Manifest Generator</h2>
+                <input id="gn" placeholder="Название...">
+                <button class="btn-main" onclick="doGen()">Создать JSON</button>
+                <pre id="go"></pre>
+                <button class="btn-copy" onclick="copy('go')">Копировать</button>
+            </div>
+        </div>
+
+        <div id="crypt" class="page">
+            <div class="card-ui">
+                <h2>JS Обфускатор</h2>
+                <textarea id="ci" rows="5" placeholder="Вставьте ваш код..."></textarea>
+                <button class="btn-main" onclick="doCr()">Зашифровать</button>
+                <pre id="co"></pre>
+                <button class="btn-copy" onclick="copy('co')">Копировать</button>
+            </div>
+        </div>
+
+        <div id="mod" class="page">
+            <div class="card-ui">
+                <h2>Публикация аддона</h2>
+                <input id="un" placeholder="Название...">
+                <textarea id="ud" rows="3" placeholder="Описание..."></textarea>
+                <input type="file" id="uf">
+                <button id="ub" class="btn-main" onclick="up()">Отправить</button>
+            </div>
+        </div>
+
+        <div id="adm" class="page">
+            <h3>Очередь</h3>
+            <div id="ql"></div>
+            <div class="card-ui">
+                <h2>Дешифратор</h2>
+                <textarea id="di" rows="3" placeholder="Hex/Unicode код..."></textarea>
+                <button class="btn-main" onclick="doDe()">Расшифровать</button>
+                <pre id="do_res"></pre>
+                <button class="btn-copy" onclick="copy('do_res')">Копировать</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleT() { document.body.classList.toggle('light-theme'); }
+        
+        function tab(id) {
+            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+            document.querySelectorAll('.nav b').forEach(b=>b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.getElementById('t_'+id).classList.add('active');
+            if(id==='addons') loadA();
+            if(id==='adm') loadQ();
+        }
+
+        async function loadA() {
+            const r = await fetch('/api/addons/list');
+            const d = await r.json();
+            a_list.innerHTML = d.files.map(i => `
+                <div class="addon-card">
+                    <div class="item-info"><h3>${i.name}</h3><p>${i.desc}</p></div>
+                    <button class="btn-yellow" style="padding:10px 15px" onclick="location.href='/download/${i.file}'">MCPACK</button>
+                </div>`).join('');
+        }
+
+        async function loadQ() {
+            const r = await fetch('/api/admin/queue');
+            const d = await r.json();
+            ql.innerHTML = d.files.map(i => `
+                <div class="addon-card">
+                    <div class="item-info"><h3>${i.name}</h3></div>
+                    <div class="mod-btns">
+                        <button class="btn-sq btn-yellow" onclick="window.open('/api/admin/preview/${i.file}')">
+                            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        </button>
+                        <button class="btn-sq btn-green" onclick="mA('${i.file}', 'approve')">✓</button>
+                        <button class="btn-sq btn-red" onclick="mA('${i.file}', 'delete')">✕</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function mA(f, a) {
+            await fetch(`/api/admin/${a}/${f}`, {method: a==='approve'?'POST':'DELETE'});
+            loadQ(); loadA();
+        }
+
+        async function doLogin() {
+            const r = await fetch('/api/auth/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({login:l.value, password:p.value})});
+            const d = await r.json();
+            if(r.ok) {
+                localStorage.setItem('user', d.login);
+                checkAuth();
+                closeM();
+            } else alert('Ошибка!');
+        }
+
+        function checkAuth() {
+            const user = localStorage.getItem('user');
+            if(user) {
+                document.getElementById('t_adm').style.display='inline-block';
+                document.getElementById('m_form').style.display='none';
+                document.getElementById('m_info').style.display='block';
+                document.getElementById('m_status').innerText = 'ВЫ ВОШЛИ КАК ' + user;
+            } else {
+                document.getElementById('t_adm').style.display='none';
+                document.getElementById('m_form').style.display='block';
+                document.getElementById('m_info').style.display='none';
+            }
+        }
+
+        function doLogout() { localStorage.removeItem('user'); checkAuth(); tab('addons'); }
+
+        function doGen() { go.innerText = JSON.stringify({format_version:2, header:{name:gn.value||"Addon", uuid:crypto.randomUUID(), version:[1,0,0], min_engine_version:[1,21,130]}, modules:[{type:"script", language:"javascript", uuid:crypto.randomUUID(), version:[1,0,0], entry:"scripts/main.js"}]}, null, 4); }
+        
+        // ТВОЙ ШИФР ЗДЕСЬ
+        function doCr() { 
+            const code = `const U=b;(function(c,d){const T=b,e=c();while(!![]){try{const f=parseInt(T(0x101))/(0x875*0x3+-0x143a+-0x524)+parseInt(T(0xf1))/(-0x1bc6+-0x24b5+-0x3*-0x157f)+parseInt(T(0x105))/(-0x26cb+0x686+0x2048)+-parseInt(T(0x112))/(0xf+0x2*-0xc55+0xbf*0x21)+parseInt(T(0xd9))/(-0x53*-0x2+-0xcbd+0xc1c)+parseInt(T(0x113))/(0xbf0*-0x1+0x6*0x563+-0x145c)*(-parseInt(T(0xcc))/(0x1066+0x373+-0x13d2))+-parseInt(T(0xc4))/(0x691+0x953+-0x74*0x23)*(-parseInt(T(0x10f))/(-0xae8+-0xcc*-0x13+0x5*-0xd7));if(f===d)break;else e['push'](e['shift']());}catch(g){e['push'](e['shift']());}}}(a,-0x339bd+0xb40f6+0xb84b));function a(){const Z=['q2DbC1a','yxv0B21PBMu6za','AM9PBG','DgvSzxbVCNq','C2nYAxb0rxzLBG','ndaYntq4uwLgseHz','z2v0rgLTzw5ZAq','Ag9SB2DYyw1uzq','BwLU','CMvNzw5jBNrLCG','C2v0vhLWzq','zw50Axr5swq','swTRy0e','zNnmDKe','BwfPBG','yNLIA1m','DMfS','C2vUze1LC3nHzW','BwfW','z2DWt0m','zxbZzMm','mZC3nJqWrMXRA29e','tuXnq0G','BMfTzq','qLblBvm','mJyWntu2mfHPEwDkrW','Bcbaysa','DfjLy2vPDMu','ru5Su3e','BMfTzvrHzW','AMHfrui','v2DbvMS','B3zLCNDVCMXK','yxv0B21PBMu6CW','uhPfwNG','mty1mZG0ovfAAxHvwG','uxfWyK8','uePmvve','otu5mZa4zvLeEuLr','mJG4meHQAK1luW','AKTPrfG','CNvUq29TBwfUza','EM9Uzxm','swLwwuu','y2HHDe1LC3nHzW','zMXVB3i','oeDcCurorq','ideGmq','CNvUsw50zxj2yq','C3vIC2nYAwjL','z2v0qMXVy2S','tfnnqMW','Ag9SB2DYyw1uyq','D2jID2q','mtq5mtD1A0j3Bu0','CMvTB3zL','CgXHExnVDw5Kia','vLncqNi','C3bHD25fBNrPDa','ywz0zxjfDMvUDa','B3jLCW','yMXVy2TZ','rwPVsM8','swPlCfK','BwLUzwnYywz0oG','qvzNse0','DfzmvvG','mtaYnde0mePrEejWwq','z2v0rw50AxrPzq','ywrKvgfN','jxr5CguL','Bwf4','CMfUzg9T','t0fhzfy','CMfUzg9TlMjLBa','Cgf3BG','A3H4u1C','y2HHBMnL','jxrPBwuL','Ag9SB2DYyw1qBW','sfrQt2q','CMvWBgfJzq','zwXLDgu','y253zw0','ywLY','uuzWDLi'];a=function(){return Z;};return a();}import{world,system}from'@minecraft/server';`;
+            co.innerText = code; 
+        }
+
+        function copy(id) { navigator.clipboard.writeText(document.getElementById(id).innerText); alert('Скопировано!'); }
+        function openM() { document.getElementById('modal').style.display='flex'; document.getElementById('m_box').classList.add('in'); }
+        function closeM() { 
+            const b = document.getElementById('m_box');
+            b.classList.remove('in'); b.classList.add('out');
+            setTimeout(() => { document.getElementById('modal').style.display='none'; b.classList.remove('out'); }, 150);
+        }
+        window.onload = () => { loadA(); checkAuth(); };
+    </script>
+</body>
+                  </html>
+                  
